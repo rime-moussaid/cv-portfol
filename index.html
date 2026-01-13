@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rime Moussaid | Data & Marketing Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=Playfair+Display:ital,wght@0,900;1,900&family=Noto+Sans+Arabic:wght@400;700&display=swap');
+
+        :root {
+            --bg: #0a0a0a;
+            --text: #ffffff;
+            --accent: #6366f1;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        .light-mode {
+            --bg: #f8f9fa;
+            --text: #0a0a0a;
+            --accent: #4f46e5;
+            --glass: rgba(0, 0, 0, 0.03);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+        }
+
+        [dir="rtl"] { font-family: 'Noto Sans Arabic', sans-serif; }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .custom-cursor {
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.2s ease;
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 10vw, 8rem);
+            line-height: 0.9;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            transition: all 0.4s ease;
+        }
+
+        .profile-img-container {
+            position: relative;
+            width: 280px;
+            height: 380px;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .profile-img-container:hover img {
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after { width: 100%; }
+
+        /* Support Arabe */
+        [dir="rtl"] .hero-title { font-family: 'Noto Sans Arabic', sans-serif; font-weight: 900; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent);
+            z-index: 100;
+            width: 0%;
+        }
+
+        .lang-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .interest-tag {
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .interest-tag:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white">
+
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="progress-bar" id="progress"></div>
+    <div id="canvas-container"></div>
+
+    <!-- Barre de Navigation -->
+    <nav class="fixed top-0 w-full z-50 p-6 flex justify-between items-center">
+        <div class="text-2xl font-bold tracking-tighter">RIME<span class="text-indigo-500">.</span></div>
+        
+        <div class="flex items-center gap-4 glass-card px-4 py-2">
+            <button onclick="changeLang('fr')" class="lang-btn px-2 py-1 text-xs font-bold rounded active" data-lang="fr">FR</button>
+            <button onclick="changeLang('en')" class="lang-btn px-2 py-1 text-xs font-bold rounded" data-lang="en">EN</button>
+            <button onclick="changeLang('ar')" class="lang-btn px-2 py-1 text-xs font-bold rounded" data-lang="ar">AR</button>
+            <div class="w-[1px] h-4 bg-gray-500 mx-2"></div>
+            <button onclick="toggleTheme()" class="hover:text-indigo-400 transition" id="theme-icon">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="relative z-10 px-6 max-w-7xl mx-auto">
+        
+        <!-- Section Hero -->
+        <section class="min-h-screen flex flex-col justify-center pt-20">
+            <div class="grid lg:grid-cols-[1fr,auto] gap-12 items-center">
+                <div class="reveal">
+                    <p id="hero-tagline" class="text-indigo-500 font-bold tracking-[0.3em] uppercase mb-4">Spécialiste Marketing & Data</p>
+                    <h1 class="hero-title mb-8" id="hero-name">RIME<br>MOUSSAID</h1>
+                    <p class="text-xl text-gray-400 leading-relaxed max-w-md" id="hero-desc">
+                        Étudiante à l'ESTS, je traduis les données complexes en stratégies de croissance impactantes.
+                    </p>
+                    
+                    <div class="mt-8 flex flex-wrap gap-4">
+                        <a href="Awesome_CV.pdf" download class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-full font-bold transition-all transform hover:-translate-y-1 inline-flex items-center gap-2">
+                            <i class="fas fa-download"></i> <span id="btn-cv">Mon CV (PDF)</span>
+                        </a>
+                        <div class="flex gap-4 items-center">
+                            <a href="https://github.com/rime-moussaid" target="_blank" class="glass-card w-12 h-12 flex items-center justify-center hover:text-indigo-500 transition-colors">
+                                <i class="fab fa-github text-xl"></i>
+                            </a>
+                            <a href="https://kaggle.com/rime-moussaid" target="_blank" class="glass-card w-12 h-12 flex items-center justify-center hover:text-indigo-500 transition-colors">
+                                <i class="fab fa-kaggle text-xl"></i>
+                            </a>
+                            <a href="mailto:rimemoussaid908@gmail.com" class="glass-card w-12 h-12 flex items-center justify-center hover:text-indigo-500 transition-colors">
+                                <i class="fas fa-envelope text-xl"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo de Profil -->
+                <div class="reveal delay-200 hidden lg:block">
+                    <div class="profile-img-container">
+                        <img src="rima.jpg" alt="Rime Moussaid" onerror="this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=688&auto=format&fit=crop'">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 flex gap-6 reveal delay-300">
+                <div class="text-left">
+                    <span class="block text-4xl font-bold">2025</span>
+                    <span class="text-gray-500 uppercase text-xs tracking-widest" id="label-stage">Stage Actuel</span>
+                </div>
+                <div class="text-left">
+                    <span class="block text-4xl font-bold">ESTS</span>
+                    <span class="text-gray-500 uppercase text-xs tracking-widest" id="label-edu">Formation</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grille d'Expériences -->
+        <section class="py-32" id="experience-section">
+            <h2 class="text-6xl font-black mb-20 tracking-tighter" id="title-exp">PARCOURS</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8" id="exp-container">
+                <!-- Les éléments seront injectés par JS -->
+            </div>
+        </section>
+
+        <!-- Section Projets -->
+        <section class="py-32" id="projects-section">
+            <h2 class="text-6xl font-black mb-20 tracking-tighter" id="title-projects">PROJETS</h2>
+            <div class="grid md:grid-cols-3 gap-8" id="projects-container">
+                <!-- Injecté par JS -->
+            </div>
+        </section>
+
+        <!-- Compétences & Passions -->
+        <section class="py-32 grid md:grid-cols-2 gap-20 items-center">
+            <div class="glass-card p-12 reveal">
+                <h3 class="text-4xl font-bold mb-8" id="title-skills">Expertise</h3>
+                <div class="space-y-6" id="skills-list">
+                    <!-- Injecté par JS -->
+                </div>
+                
+                <h3 class="text-2xl font-bold mt-12 mb-6" id="title-interests">Passions</h3>
+                <div class="flex flex-wrap gap-3" id="interests-list">
+                    <!-- Injecté par JS -->
+                </div>
+            </div>
+            <div class="relative h-[400px] flex items-center justify-center">
+                <div id="sphere-target" class="w-full h-full"></div>
+            </div>
+        </section>
+
+        <!-- Pied de page -->
+        <footer class="py-20 border-t border-white/10 text-center">
+            <h4 class="text-8xl font-black opacity-10 mb-12 uppercase" id="title-contact">CONTACT</h4>
+            <div class="flex flex-col md:flex-row justify-center gap-12 text-xl font-bold mb-12">
+                <a href="mailto:rimemoussaid908@gmail.com" class="hover:text-indigo-400 transition flex items-center gap-2 justify-center">
+                    <i class="fas fa-envelope text-indigo-500"></i> rimemoussaid908@gmail.com
+                </a>
+                <a href="tel:+212679400812" class="hover:text-indigo-400 transition flex items-center gap-2 justify-center">
+                    <i class="fas fa-phone text-indigo-500"></i> +212 6 79 40 08 12
+                </a>
+            </div>
+            <div class="flex justify-center gap-8 mb-16">
+                <a href="https://github.com/rime-moussaid" target="_blank" class="text-3xl hover:text-indigo-500 transition-colors"><i class="fab fa-github"></i></a>
+                <a href="https://kaggle.com/rime-moussaid" target="_blank" class="text-3xl hover:text-indigo-500 transition-colors"><i class="fab fa-kaggle"></i></a>
+            </div>
+            <p class="text-gray-500 text-sm" id="footer-copy">© 2025 RIME MOUSSAID. TOUS DROITS RÉSERVÉS.</p>
+        </footer>
+    </main>
+
+    <script>
+        // --- DONNÉES MULTILINGUES ---
+        const content = {
+            fr: {
+                name: "RIME<br>MOUSSAID",
+                tagline: "Spécialiste Marketing & Data",
+                desc: "Étudiante motivée à l'ESTS, passionnée par le marketing digital et l'analyse comportementale. Je traduis les données en actions stratégiques.",
+                btnCv: "Télécharger CV",
+                labelStage: "Stage Actuel",
+                labelEdu: "Formation",
+                titleExp: "EXPÉRIENCE",
+                titleProjects: "PROJETS",
+                titleSkills: "COMPÉTENCES",
+                titleInterests: "CENTRES D'INTÉRÊT",
+                titleContact: "CONTACT",
+                footerCopy: "© 2025 RIME MOUSSAID. TOUS DROITS RÉSERVÉS.",
+                experiences: [
+                    { date: "2025", company: "ACCESS TÉLÉSERVICE", role: "Stage Télémarketing", desc: "Contact donateurs, sensibilisation et collecte. Développement de l'éloquence commerciale et techniques de négociation." },
+                    { date: "2023-2024", company: "ESTS", role: "Bac Sciences Éco", desc: "Formation approfondie en économie, gestion d'entreprise et mathématiques appliquées." }
+                ],
+                projects: [
+                    { title: "Analyse Marché Local", type: "Projet Académique", desc: "Étude complète de la concurrence et recommandations stratégiques pour un secteur local." },
+                    { title: "Mini-site Produit", type: "Portfolio Web", desc: "Création et structuration du contenu marketing pour le lancement d'un service innovant." },
+                    { title: "Étude Comportementale", type: "Analyse Data", desc: "Analyse des tendances de consommation actuelles via des outils de segmentation." }
+                ],
+                skills: ["Marketing Digital", "Data Analysis (Excel/Analytics)", "Segmentation Client", "Design (Canva)", "Communication Stratégique"],
+                interests: ["Réseaux Sociaux", "Lecture", "Musique", "Analyse de Tendances", "Voyages"]
+            },
+            en: {
+                name: "RIME<br>MOUSSAID",
+                tagline: "Marketing & Data Specialist",
+                desc: "Motivated student at ESTS, passionate about digital marketing and consumer behavior. I translate data into strategic actions.",
+                btnCv: "Download CV",
+                labelStage: "Current Internship",
+                labelEdu: "Education",
+                titleExp: "EXPERIENCE",
+                titleProjects: "PROJECTS",
+                titleSkills: "EXPERTISE",
+                titleInterests: "INTERESTS",
+                titleContact: "CONTACT",
+                footerCopy: "© 2025 RIME MOUSSAID. ALL RIGHTS RESERVED.",
+                experiences: [
+                    { date: "2025", company: "ACCESS TELESERVICE", role: "Telemarketing Intern", desc: "Donor outreach, awareness raising, and fundraising. Developed commercial eloquence and negotiation skills." },
+                    { date: "2023-2024", company: "ESTS", role: "Economics Degree", desc: "Advanced training in economics, business management, and applied mathematics." }
+                ],
+                projects: [
+                    { title: "Local Market Analysis", type: "Academic Project", desc: "Comprehensive competitive study and strategic recommendations for a local sector." },
+                    { title: "Product Mini-site", type: "Web Portfolio", desc: "Creation and structuring of marketing content for an innovative service launch." },
+                    { title: "Behavioral Study", type: "Data Analysis", desc: "Analysis of current consumer trends using segmentation tools." }
+                ],
+                skills: ["Digital Marketing", "Data Analysis (Excel/Analytics)", "Customer Segmentation", "Design (Canva)", "Strategic Communication"],
+                interests: ["Social Media", "Reading", "Music", "Trend Analysis", "Travel"]
+            },
+            ar: {
+                name: "ريم<br>موسعيد",
+                tagline: "أخصائية تسويق وبيانات",
+                desc: "طالبة في المدرسة العليا للتكنولوجيا، شغوفة بالتسويق الرقمي وتحليل سلوك المستهلك. أقوم بترجمة البيانات إلى استراتيجيات نمو.",
+                btnCv: "تحميل السيرة الذاتية",
+                labelStage: "تدريب حالي",
+                labelEdu: "التكوين",
+                titleExp: "المسار",
+                titleProjects: "المشاريع",
+                titleSkills: "المهارات",
+                titleInterests: "الاهتمامات",
+                titleContact: "تواصل معي",
+                footerCopy: "© 2025 ريم موسعيد. جميع الحقوق محفوظة.",
+                experiences: [
+                    { date: "2025", company: "أكسيس تيليسيرفيس", role: "تدريب في التسويق عبر الهاتف", desc: "التواصل مع المانحين، التوعية وجمع التبرعات. تطوير مهارات التواصل التجاري والتفاوض." },
+                    { date: "2023-2024", company: "ESTS", role: "بكالوريا علوم اقتصادية", desc: "تكوين معمق في الاقتصاد وتدبير المقاولات والرياضيات التطبيقية." }
+                ],
+                projects: [
+                    { title: "تحليل السوق المحلي", type: "مشروع أكاديمي", desc: "دراسة شاملة للمنافسة وتوصيات استراتيجية لقطاع محلي." },
+                    { title: "موقع منتج مصغر", type: "بورتفوليو ويب", desc: "إنشاء وهيكلة المحتوى التسويقي لإطلاق خدمة مبتكرة." },
+                    { title: "دراسة سلوكية", type: "تحليل بيانات", desc: "تحليل اتجاهات الاستهلاك الحالية باستخدام أدوات التقسيم." }
+                ],
+                skills: ["التسويق الرقمي", "تحليل البيانات", "تقسيم العملاء", "التصميم (كانفا)", "التواصل الاستراتيجي"],
+                interests: ["شبكات التواصل", "القراءة", "الموسيقى", "تحليل الاتجاهات", "السفر"]
+            }
+        };
+
+        // --- GESTION DES LANGUES ---
+        function changeLang(lang) {
+            const data = content[lang];
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+
+            // Mettre à jour le DOM
+            document.getElementById('hero-name').innerHTML = data.name;
+            document.getElementById('hero-tagline').innerText = data.tagline;
+            document.getElementById('hero-desc').innerText = data.desc;
+            document.getElementById('btn-cv').innerText = data.btnCv;
+            document.getElementById('label-stage').innerText = data.labelStage;
+            document.getElementById('label-edu').innerText = data.labelEdu;
+            document.getElementById('title-exp').innerText = data.titleExp;
+            document.getElementById('title-projects').innerText = data.titleProjects;
+            document.getElementById('title-skills').innerText = data.titleSkills;
+            document.getElementById('title-interests').innerText = data.titleInterests;
+            document.getElementById('title-contact').innerText = data.titleContact;
+            document.getElementById('footer-copy').innerText = data.footerCopy;
+
+            // Bouton actif
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+
+            // Rendu des Expériences
+            const expContainer = document.getElementById('exp-container');
+            expContainer.innerHTML = data.experiences.map((exp, i) => `
+                <div class="glass-card p-10 group hover:bg-indigo-500/10 transition-colors cursor-default reveal">
+                    <span class="text-indigo-500 font-bold mb-4 block">${exp.date}</span>
+                    <h3 class="text-2xl font-bold mb-2">${exp.company}</h3>
+                    <p class="text-gray-400 font-medium mb-4 uppercase tracking-tighter">${exp.role}</p>
+                    <p class="text-sm text-gray-500 leading-relaxed">${exp.desc}</p>
+                </div>
+            `).join('');
+
+            // Rendu des Projets
+            const projectsContainer = document.getElementById('projects-container');
+            projectsContainer.innerHTML = data.projects.map(proj => `
+                <div class="glass-card p-8 border-b-4 border-indigo-500 hover:scale-[1.02] transition-transform reveal">
+                    <p class="text-xs text-indigo-500 font-bold uppercase mb-2">${proj.type}</p>
+                    <h4 class="text-xl font-bold mb-4">${proj.title}</h4>
+                    <p class="text-gray-500 text-sm">${proj.desc}</p>
+                </div>
+            `).join('');
+
+            // Rendu des Compétences
+            const skillsContainer = document.getElementById('skills-list');
+            skillsContainer.innerHTML = data.skills.map(skill => `
+                <div class="flex justify-between items-center group">
+                    <span class="text-lg font-medium group-hover:translate-x-2 transition-transform">${skill}</span>
+                    <div class="w-12 h-[1px] bg-white/20 group-hover:w-20 transition-all"></div>
+                </div>
+            `).join('');
+
+            // Rendu des Centres d'intérêt
+            const interestsContainer = document.getElementById('interests-list');
+            interestsContainer.innerHTML = data.interests.map(interest => `
+                <span class="interest-tag">${interest}</span>
+            `).join('');
+
+            // Rafraîchissement des animations GSAP
+            gsap.from(".reveal", { opacity: 0, y: 30, duration: 1, stagger: 0.1, ease: "power4.out" });
+        }
+
+        // --- ARRIÈRE-PLAN THREE.JS ---
+        let scene, camera, renderer, particles;
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 5000; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0x6366f1, size: 2, transparent: true, opacity: 0.5 });
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            camera.position.z = 500;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.y += 0.001;
+            particles.rotation.x += 0.0005;
+            renderer.render(scene, camera);
+        }
+
+        // --- UX & THÈME ---
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.querySelector('#theme-icon i');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+            
+            // Adapter la couleur des particules
+            particles.material.color.set(document.body.classList.contains('light-mode') ? 0x4f46e5 : 0x6366f1);
+        }
+
+        // Curseur Personnalisé
+        document.addEventListener('mousemove', (e) => {
+            gsap.to("#cursor", { x: e.clientX, y: e.clientY, duration: 0.1 });
+        });
+
+        // Barre de Progression au Scroll
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("progress").style.width = scrolled + "%";
+        });
+
+        // Initialisation
+        window.onload = () => {
+            initThree();
+            animate();
+            changeLang('fr'); // Par défaut
+
+            // Entrée GSAP
+            gsap.from(".hero-title", { duration: 2, y: 100, opacity: 0, ease: "expo.out" });
+        };
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+    </script>
+</body>
+</html>
